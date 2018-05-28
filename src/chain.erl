@@ -172,7 +172,7 @@ sign(Tx, PrivKey) ->
   crypto:sign(ecdsa, sha256, Bin, [PrivKey, crypto:ec_curve(secp256k1)]).
 
 serialize_to_binary(Map) ->
-  term_to_binary(Map).   %% This is not a unique mapping!!
+  term_to_binary(Map).
 
 verify_signature(Tx, Signature, PubKey) ->
   Bin = serialize_to_binary(Tx),
