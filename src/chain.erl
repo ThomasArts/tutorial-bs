@@ -139,7 +139,7 @@ add_txs(Accounts, [], Unfit) ->
 add_txs(Accounts, [{spend, From, To, Amount, Fee} = Tx | Txs], Unfit) ->
   try
     FromAccount = maps:get(From, Accounts),
-    true = (Fee >= 1 andalso maps:get(balance, FromAccount) >= Amount - Fee),
+    true = (Fee >= 1 andalso maps:get(balance, FromAccount) >= Amount + Fee),
     ToAccount = maps:get(To, Accounts, #{balance => 0}),
     NewAccounts = 
       maps:merge(Accounts, #{From => maps:update(balance,  maps:get(balance, FromAccount) - Amount - Fee, FromAccount),
