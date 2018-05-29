@@ -68,7 +68,7 @@ spend_args(S) ->
        [From, choose(1, max(1, From#account.balance - Fee)), Fee, To#account.pubkey ]).
 
 spend_pre(S, [From, Amount, Fee, To]) ->
-  lists:member(From, S#state.accounts).
+  lists:member(From, S#state.accounts) andalso lists:keymember(To, #account.pubkey, S#state.accounts).
 
 spend_adapt(S, [From, Amount, Fee, To]) ->
   case lists:keyfind(From#account.pubkey, #account.pubkey, S#state.accounts) of
