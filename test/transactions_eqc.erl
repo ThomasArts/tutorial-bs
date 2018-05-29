@@ -65,7 +65,7 @@ spend_pre(S) ->
 
 spend_args(S) ->
   ?LET({From, Fee, To}, {elements(S#state.accounts), choose(1,5), elements(S#state.accounts)},
-       [From, int(), Fee, To#account.pubkey ]).
+       [From, choose(1, From#account.balance - Fee), Fee, To#account.pubkey ]).
 
 
 spend_pre(_S, [From, Amount, Fee, To]) ->
