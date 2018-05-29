@@ -68,7 +68,11 @@ spend_args(S) ->
        [From, choose(1, max(1, From#account.balance - Fee)), Fee, To#account.pubkey ]).
 
 spend_pre(S, [From, Amount, Fee, To]) ->
-  lists:member(From, S#state.accounts) andalso lists:keymember(To, #account.pubkey, S#state.accounts).
+  lists:member(From, S#state.accounts) andalso lists:keymember(To, #account.pubkey, S#state.accounts)
+    andalso spend_valid(From, Amount, Fee).
+
+spend_valid(From, Amount, Fee) ->
+    Amount + Fee =< From#account.balance.
 
 spend_adapt(S, [From, Amount, Fee, To]) ->
   case lists:keyfind(From#account.pubkey, #account.pubkey, S#state.accounts) of
@@ -96,7 +100,14 @@ spend_next(S, _Value, [From, Amount, Fee, To]) ->
   S#state{accounts = Accounts2}.
 
 spend_post(_S, [From, Amount, Fee, To], _Res) ->
+spend_post(_S, [_From, _Amount, _Fee, _To], _Res) ->
   true.
+
+spend_features(_S, [From, Amount, Fee, _To], _Res) ->
+  [{fee, Fee}] ++
+    [ if Amount + Fee > From#account.balance ->  insufficient_balance;
+         true -> sufficient_balance
+      end ].
 
 
 %% --- ... more operations
