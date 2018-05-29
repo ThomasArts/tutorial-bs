@@ -84,8 +84,16 @@ spend(From, Amount, Fee, To) ->
          fee => Fee},
   chain:spend({signed, Tx, chain:sign(Tx, From#account.privkey)}).
 
+%% due to adapt we know From is the right account!
 spend_next(S, _Value, [From, Amount, Fee, To]) ->
-  S.
+  Accounts1 =
+    lists:keyreplace(From#account.pubkey, #account.pubkey, S#state.accounts,
+                     From#account{balance = From#account.balance - Amount - Fee}),
+  ToAccount = lists:keyfind(To, #account.pubkey, S#state.accounts),
+  Accounts2 = 
+    lists:keyreplace(To, #account.pubkey, Accounts1,
+                     ToAccount#account{balance = ToAccount#account.balance + Amount}),
+  S#state{accounts = Accounts2}.
 
 spend_post(_S, [From, Amount, Fee, To], _Res) ->
   true.
