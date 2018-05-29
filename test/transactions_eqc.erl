@@ -85,7 +85,8 @@ spend(From, Amount, Fee, To) ->
          receiver => To,
          amount => Amount,
          fee => Fee},
-  chain:spend({signed, Tx, chain:sign(Tx, From#account.privkey)}).
+  chain:spend({signed, Tx, chain:sign(Tx, From#account.privkey)}),
+  {spend, maps:get(sender, Tx), maps:get(receiver, Tx), maps:get(amount, Tx), maps:get(fee, Tx)}.
 
 %% due to adapt we know From is the right account!
 spend_next(S, Value, [From, Amount, Fee, To]) ->
@@ -161,7 +162,7 @@ prop_transactions() ->
         pretty_commands(?MODULE, Cmds, {H, S, Res},
                         conjunction([{result, Res == ok},
                                      {balances, equals(FinalBalances, [])},
-                                     {transactions, equals(TransactionPool, [])}
+                                     {transactions, equals(TransactionPool -- S#state.invalid_txs, [])}
                                     ])))))
   end))).
 
