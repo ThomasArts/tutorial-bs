@@ -67,8 +67,8 @@ spend_args(S) ->
   ?LET({From, Fee, To}, {elements(S#state.accounts), choose(1,5), elements(S#state.accounts)},
        [From, choose(1, max(1, From#account.balance - Fee)), Fee, To#account.pubkey ]).
 
-spend_pre(_S, [From, Amount, Fee, To]) ->
-  true.
+spend_pre(S, [From, Amount, Fee, To]) ->
+  lists:member(From, S#state.accounts).
 
 spend(From, Amount, Fee, To) ->
   Tx = #{sender => From#account.pubkey,
