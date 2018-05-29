@@ -68,8 +68,7 @@ spend_args(S) ->
        [From, choose(1, max(1, From#account.balance - Fee)), Fee, To#account.pubkey ]).
 
 spend_pre(S, [From, Amount, Fee, To]) ->
-  lists:member(From, S#state.accounts) andalso lists:keymember(To, #account.pubkey, S#state.accounts)
-    andalso spend_valid(From, Amount, Fee).
+  lists:member(From, S#state.accounts) andalso lists:keymember(To, #account.pubkey, S#state.accounts).
 
 spend_valid(From, Amount, Fee) ->
     Amount + Fee =< From#account.balance.
@@ -90,16 +89,19 @@ spend(From, Amount, Fee, To) ->
 
 %% due to adapt we know From is the right account!
 spend_next(S, _Value, [From, Amount, Fee, To]) ->
-  Accounts1 =
-    lists:keyreplace(From#account.pubkey, #account.pubkey, S#state.accounts,
-                     From#account{balance = From#account.balance - Amount - Fee}),
-  ToAccount = lists:keyfind(To, #account.pubkey, S#state.accounts),
-  Accounts2 = 
-    lists:keyreplace(To, #account.pubkey, Accounts1,
-                     ToAccount#account{balance = ToAccount#account.balance + Amount}),
-  S#state{accounts = Accounts2}.
+  case spend_valid(From, Amount, Fee) of
+    false -> S;
+    true ->
+      Accounts1 =
+        lists:keyreplace(From#account.pubkey, #account.pubkey, S#state.accounts,
+                         From#account{balance = From#account.balance - Amount - Fee}),
+      ToAccount = lists:keyfind(To, #account.pubkey, S#state.accounts),
+      Accounts2 = 
+        lists:keyreplace(To, #account.pubkey, Accounts1,
+                         ToAccount#account{balance = ToAccount#account.balance + Amount}),
+      S#state{accounts = Accounts2}
+  end.
 
-spend_post(_S, [From, Amount, Fee, To], _Res) ->
 spend_post(_S, [_From, _Amount, _Fee, _To], _Res) ->
   true.
 
