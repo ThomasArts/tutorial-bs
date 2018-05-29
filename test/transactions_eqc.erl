@@ -109,6 +109,8 @@ prop_transactions() ->
 
     {H, S, Res} = run_commands(Cmds),
 
+    wait_blocks(1),
+
     {ok, TransactionPool} = chain:transactions(),
     FinalBalances = 
       lists:foldl(fun(A, Acc) ->
@@ -129,3 +131,18 @@ prop_transactions() ->
                                      {transactions, equals(TransactionPool, [])}
                                     ])))))
   end))).
+
+                        
+wait_blocks(N) ->
+  {ok, #{height := H}} = chain:top(),
+  wait_for_block(H+N, N*1000).
+
+wait_for_block(Height, Timeout) when Timeout > 0 ->
+  timer:sleep(100),
+  {ok, #{height := H}} = chain:top(),
+  case H >= Height of
+    true  -> H;
+    false -> wait_for_block(Height, Timeout - 100)
+  end;
+wait_for_block(_, _) ->
+  tiemout.
