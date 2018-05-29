@@ -15,7 +15,7 @@
 %% -- State and state functions ----------------------------------------------
 -record(state, {accounts = [], invalid_txs = []}).
 
--record(account, {pubkey, privkey, balance}).
+-record(account, {pubkey, privkey, balance, blocked = false}).
 
 initial_state() ->
   #state{}.
@@ -68,7 +68,9 @@ spend_args(S) ->
        [From, choose(1, max(1, From#account.balance - Fee)), Fee, To#account.pubkey ]).
 
 spend_pre(S, [From, Amount, Fee, To]) ->
-  lists:member(From, S#state.accounts) andalso lists:keymember(To, #account.pubkey, S#state.accounts).
+  ToAccount = lists:keyfind(To, #account.pubkey, S#state.accounts),
+  lists:member(From, S#state.accounts) andalso ToAccount /= false andalso
+    not ToAccount#account.blocked.
 
 spend_valid(From, Amount, Fee) ->
     Amount + Fee =< From#account.balance.
@@ -91,7 +93,9 @@ spend(From, Amount, Fee, To) ->
 %% due to adapt we know From is the right account!
 spend_next(S, Value, [From, Amount, Fee, To]) ->
   case spend_valid(From, Amount, Fee) of
-    false -> S#state{invalid_txs = S#state.invalid_txs ++ [Value]};
+    false -> S#state{invalid_txs = S#state.invalid_txs ++ [Value],
+                     accounts = lists:keyreplace(From#account.pubkey, #account.pubkey, S#state.accounts,
+                                                 From#account{blocked = true}) };
     true ->
       Accounts1 =
         lists:keyreplace(From#account.pubkey, #account.pubkey, S#state.accounts,
