@@ -13,7 +13,7 @@
 -compile([export_all, nowarn_export_all]).
 
 %% -- State and state functions ----------------------------------------------
--record(state, {accounts = []}).
+-record(state, {accounts = [], invalid_txs = []}).
 
 -record(account, {pubkey, privkey, balance}).
 
@@ -88,9 +88,9 @@ spend(From, Amount, Fee, To) ->
   chain:spend({signed, Tx, chain:sign(Tx, From#account.privkey)}).
 
 %% due to adapt we know From is the right account!
-spend_next(S, _Value, [From, Amount, Fee, To]) ->
+spend_next(S, Value, [From, Amount, Fee, To]) ->
   case spend_valid(From, Amount, Fee) of
-    false -> S;
+    false -> S#state{invalid_txs = S#state.invalid_txs ++ [Value]};
     true ->
       Accounts1 =
         lists:keyreplace(From#account.pubkey, #account.pubkey, S#state.accounts,
