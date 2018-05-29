@@ -36,7 +36,7 @@ create_account_pre(_S) ->
   true.
 
 create_account_args(_S) ->
-  [patron(), account_gen(elements([0, 100, 200])), choose(0,10)].
+  [patron(), account_gen(elements([0, 100, 200])), choose(1,10)].
 
 create_account_pre(_S, [_Patron, _Account, _Fee]) ->
   true.
