@@ -60,22 +60,28 @@ create_account_features(S, [_Patron, _Account, _Fee], _Res) ->
 
 
 %% --- Operation: spend ---
-spend_pre(_S) ->
+spend_pre(S) ->
+  length(S#state.accounts) >= 2 .
+
+spend_args(S) ->
+  ?LET({From, Fee, To}, {elements(S#state.accounts), choose(1,5), elements(S#state.accounts)},
+       [From, int(), Fee, To#account.pubkey ]).
+
+
+spend_pre(_S, [From, Amount, Fee, To]) ->
   true.
 
-spend_args(_S) ->
-  [].
+spend(From, Amount, Fee, To) ->
+  Tx = #{sender => From#account.pubkey,
+         receiver => To,
+         amount => Amount,
+         fee => Fee},
+  chain:spend({signed, Tx, chain:sign(Tx, From#account.privkey)}).
 
-spend_pre(_S, _Args) ->
-  true.
-
-spend() ->
-  ok.
-
-spend_next(S, _Value, _Args) ->
+spend_next(S, _Value, [From, Amount, Fee, To]) ->
   S.
 
-spend_post(_S, _Args, _Res) ->
+spend_post(_S, [From, Amount, Fee, To], _Res) ->
   true.
 
 
