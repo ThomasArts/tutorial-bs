@@ -70,6 +70,13 @@ spend_args(S) ->
 spend_pre(S, [From, Amount, Fee, To]) ->
   lists:member(From, S#state.accounts).
 
+spend_adapt(S, [From, Amount, Fee, To]) ->
+  case lists:keyfind(From#account.pubkey, #account.pubkey, S#state.accounts) of
+    false -> false;
+    Account ->
+      [Account, Amount, Fee, To]
+  end.
+      
 spend(From, Amount, Fee, To) ->
   Tx = #{sender => From#account.pubkey,
          receiver => To,
